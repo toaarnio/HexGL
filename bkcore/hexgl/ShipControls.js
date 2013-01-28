@@ -156,12 +156,78 @@ bkcore.hexgl.ShipControls = function(domElement)
 
 	domElement.addEventListener('keydown', onKeyDown, false);
 	domElement.addEventListener('keyup', onKeyUp, false);
+
+  function onTouch(event)
+  {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    function turnLeft(x, y) {
+      var leftEdge = (x < width*0.33);
+      var bottom = (y > height*0.75);
+      return (leftEdge && bottom);
+    };
+
+    function straightAhead(x, y) {
+      var middle = (x > width*0.33 && x < width*0.66);
+      var bottom = (y > height*0.75);
+      return (middle && bottom);
+    };
+
+    function turnRight(x, y) {
+      var rightEdge = (x > width*0.66);
+      var bottom = (y > height*0.75);
+      return (rightEdge && bottom);
+    };
+
+    function accelerate(x, y) {
+      var top = (y < height*0.5);
+      return top;
+    };
+
+    for (var i=0; i < event.changedTouches.length; i++) {
+      var touch = event.changedTouches[i];
+      var x = touch.pageX;
+      var y = touch.pageY;
+
+      if (event.type === 'touchstart') {
+        if (turnLeft(x, y)) self.key.left = true;
+        if (turnRight(x, y)) self.key.right = true;
+        if (accelerate(x, y)) self.key.forward = true;
+      }
+
+      if (event.type === 'touchend') {
+        if (turnLeft(x, y)) self.key.left = false;
+        if (turnRight(x, y)) self.key.right = false;
+        if (accelerate(x, y)) self.key.forward = false;
+      }
+
+      if (event.type === 'touchmove') {
+        if (turnLeft(x, y)) {
+          self.key.left = true;
+          self.key.right = false;
+        }
+        if (turnRight(x, y)) {
+          self.key.left = false;
+          self.key.right = true;
+        }
+        if (straightAhead(x, y)) {
+          self.key.left = false;
+          self.key.right = false;
+        }
+      }
+    }
+  };
+
+  domElement.addEventListener('touchstart', onTouch, false);
+  domElement.addEventListener('touchmove', onTouch, false);
+  domElement.addEventListener('touchend', onTouch, false);
 };
 
 bkcore.hexgl.ShipControls.prototype.control = function(threeMesh)
 {
 	this.mesh = threeMesh;
-	this.mesh.martixAutoUpdate = false;
+	this.mesh.matrixAutoUpdate = false;
 	this.dummy.position = this.mesh.position;
 };
 
@@ -193,11 +259,11 @@ bkcore.hexgl.ShipControls.prototype.reset = function(position, rotation)
 
 bkcore.hexgl.ShipControls.prototype.destroy = function()
 {
-	this.active = false;
-	this.destroyed = true;
-	this.collision.front = false;
-	this.collision.left = false;
-	this.collision.right = false;
+	//this.active = false;
+	//this.destroyed = true;
+	//this.collision.front = false;
+	//this.collision.left = false;
+	//this.collision.right = false;
 }
 
 bkcore.hexgl.ShipControls.prototype.update = function(dt)
