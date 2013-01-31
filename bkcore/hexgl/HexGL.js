@@ -30,7 +30,7 @@ bkcore.hexgl.HexGL = function(opts)
 
 	this.half = opts.half == undefined ? false : opts.half;
 
-  this.disableHUD = opts.disableHUD === undefined ? false : opts.disableHUD;
+  this.displayHUD = opts.hud === undefined ? true : (opts.hud == "true");
 
 	this.track = bkcore.hexgl.tracks[ opts.track == undefined ? 'Cityscape' : opts.track ];
 
@@ -249,7 +249,7 @@ bkcore.hexgl.HexGL.prototype.initRenderer = function()
 {
 	var renderer = new THREE.WebGLRenderer({
 		antialias: false,
-		clearColor: 0x000000
+		clearColor: 0xFF0000
 	});
 
 	renderer.physicallyBasedShading = true;
@@ -280,14 +280,14 @@ bkcore.hexgl.HexGL.prototype.initHUD = function()
 		shield: this.track.lib.get("images", "hud.shield")
 	});	
 
-  if (this.disableHUD === false) {
+  if (this.displayHUD === true) {
 	  this.containers.overlay.appendChild(this.hud.canvas);
   }
 }
 
 bkcore.hexgl.HexGL.prototype.initGameComposer = function()
 {
-	var renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
+	var renderTargetParameters = { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat, stencilBuffer: false };
 	var renderTarget = new THREE.WebGLRenderTarget( this.width, this.height, renderTargetParameters );
 
 	// GAME COMPOSER	
