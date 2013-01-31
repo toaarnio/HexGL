@@ -137,7 +137,7 @@ bkcore.hexgl.tracks.Cityscape = {
 
 	buildMaterials: function(quality)
 	{
-		if(this.quality < 1) // LOW
+		if(quality < 1) // LOW
 		{
 			this.materials.track = new THREE.MeshBasicMaterial({
 				map: this.lib.get("textures", "track.cityscape.diffuse"),
