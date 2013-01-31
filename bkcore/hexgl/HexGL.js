@@ -30,6 +30,8 @@ bkcore.hexgl.HexGL = function(opts)
 
 	this.half = opts.half == undefined ? false : opts.half;
 
+  this.disableHUD = opts.disableHUD === undefined ? false : opts.disableHUD;
+
 	this.track = bkcore.hexgl.tracks[ opts.track == undefined ? 'Cityscape' : opts.track ];
 
 	if(this.half)
@@ -277,7 +279,10 @@ bkcore.hexgl.HexGL.prototype.initHUD = function()
 		speed: this.track.lib.get("images", "hud.speed"),
 		shield: this.track.lib.get("images", "hud.shield")
 	});	
-	this.containers.overlay.appendChild(this.hud.canvas);
+
+  if (this.disableHUD === false) {
+	  this.containers.overlay.appendChild(this.hud.canvas);
+  }
 }
 
 bkcore.hexgl.HexGL.prototype.initGameComposer = function()
