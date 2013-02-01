@@ -13,22 +13,30 @@
 				overflow:hidden;
 				font-family:georgia;
 				text-align:center;
-				color: #666;
+			  color: #666;
 			}
 			h1 {color: #666	; }
 			a { color:skyblue }
 			canvas { pointer-events:none; }
-			#overlay{
+      #main {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+			#overlay {
 				position: absolute;
 				z-index: 9999;
 				top: 0;
 				left: 0;
 				width: 100%;
+        height: 100%;
 			}
 		</style>
 	</head>
 
-	<body>
+	<body id="body">
 		<div id="overlay"></div>
 		<div id="main"></div>
 
@@ -64,18 +72,19 @@
 
 		<script>
 
-			var SCREEN_WIDTH = window.innerWidth;
-			var SCREEN_HEIGHT = window.innerHeight;
-
-			var container, hudcontainer;
-
 			var hexGL;
 
-			function init() {
-				hudcontainer = document.getElementById("overlay");
-				container = document.getElementById("main");
+			var SCREEN_WIDTH;
+			var SCREEN_HEIGHT;
 
-				hexGL = new bkcore.hexgl.HexGL({
+			var container = document.getElementById("main");
+      var hudcontainer = document.getElementById("overlay");
+
+			function init() {
+        SCREEN_WIDTH = window.innerWidth;
+        SCREEN_HEIGHT = window.innerHeight;
+
+        params = {
 					document: document,
 					width: SCREEN_WIDTH,
 					height: SCREEN_HEIGHT,
@@ -84,8 +93,13 @@
 					quality: bkcore.Utils.getURLParameter('quality'),
 					difficulty: bkcore.Utils.getURLParameter('difficulty'),
 					half: bkcore.Utils.getURLParameter('half'),
+          hud : bkcore.Utils.getURLParameter('hud'),
 					track: 'Cityscape'
-				});
+        };
+
+        console.log(params);
+
+				hexGL = new bkcore.hexgl.HexGL(params);
 
 				hexGL.load({
 					onLoad: function(){
@@ -104,7 +118,32 @@
 			}
 			
 			init();
+      
+      /*
+      function toggleFullScreen(elem) {
+        console.log("attempting to go fullscreen...");
+        if (!document.mozFullScreen && !document.webkitFullScreen) {
+          if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+          } else {
+            elem.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+          }
+          document.onkeydown = undefined;
+          document.onclick = undefined;
+          window.setTimeout(function() { init(); }, 2000);
+        }
+      }
+  
+      document.onkeydown = function(e) {
+        if (e.keyCode == 13) {
+          toggleFullScreen(container);
+        }
+      };
 
+      document.onclick = function(e) {
+        toggleFullScreen(container);
+      };
+      */
 		</script>
 
 	</body>

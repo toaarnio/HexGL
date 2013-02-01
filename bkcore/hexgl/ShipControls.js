@@ -159,8 +159,10 @@ bkcore.hexgl.ShipControls = function(domElement)
 
   function onTouch(event)
   {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    event.preventDefault();
+
+    var width = SCREEN_WIDTH;
+    var height = SCREEN_HEIGHT;
 
     function turnLeft(x, y) {
       var leftEdge = (x < width*0.33);
