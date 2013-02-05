@@ -77,17 +77,21 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var t in data.textures) {
 		this.loadTexture(t, data.textures[t]);
-    this.data.textures[t].generateMipmaps = false;
-    this.data.textures[t].magFilter = THREE.NearestFilter;
-    this.data.textures[t].minFilter = THREE.NearestFilter;
+    this.data.textures[t].generateMipmaps = true;
+    //this.data.textures[t].magFilter = THREE.NearestFilter;
+    //this.data.textures[t].minFilter = THREE.NearestFilter;
+    this.data.textures[t].minFilter = THREE.LinearMipMapLinearFilter;
+    this.data.textures[t].magFilter = THREE.LinearFilter;
     console.log(this.data.textures[t]);
   }
 
 	for(var c in data.texturesCube) {
 		this.loadTextureCube(c, data.texturesCube[c]);
-    this.data.texturesCube[c].generateMipmaps = false;
-    this.data.texturesCube[c].magFilter = THREE.NearestFilter;
-    this.data.texturesCube[c].minFilter = THREE.NearestFilter;
+    this.data.texturesCube[c].generateMipmaps = true;
+    //this.data.texturesCube[c].magFilter = THREE.NearestFilter;
+    //this.data.texturesCube[c].minFilter = THREE.NearestFilter;
+    this.data.texturesCube[c].minFilter = THREE.LinearMipMapLinearFilter;
+    this.data.texturesCube[c].magFilter = THREE.LinearFilter;
     console.log(this.data.texturesCube[c]);
   }
 
