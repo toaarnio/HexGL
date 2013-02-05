@@ -100,7 +100,7 @@ bkcore.hexgl.ShipControls = function(domElement)
 	this.resetRot = null;
 
   this.useKeyboardControls = false;
-  this.useTouchControls = true;
+  this.useTouchControls = false;
 
 	this.key = {
 		forward: false,
@@ -113,10 +113,8 @@ bkcore.hexgl.ShipControls = function(domElement)
 	};
 
   this.touch = {
-    forward: false,
-    backward: false,
-    left: false,
-    right: false
+    accelerate: true,
+    heading: 0.0,
   };
 
 	this.collision = {
@@ -127,6 +125,8 @@ bkcore.hexgl.ShipControls = function(domElement)
 
 	function onKeyDown(event) 
 	{
+    self.useKeyboardControls = true;
+    
 		switch(event.keyCode) 
 		{
 			case 38: /*up*/	self.key.forward = true; break;
@@ -170,33 +170,22 @@ bkcore.hexgl.ShipControls = function(domElement)
 
   function onTouch(event)
   {
+    self.useTouchControls = true;
+
     event.preventDefault();
 
     var width = SCREEN_WIDTH;
     var height = SCREEN_HEIGHT;
 
-    function turnLeft(x, y) {
-      var leftEdge = (x < width*0.33);
-      var bottom = (y > height*0.75);
-      return (leftEdge && bottom);
-    };
-
-    function straightAhead(x, y) {
-      var middle = (x > width*0.33 && x < width*0.66);
-      var bottom = (y > height*0.75);
-      return (middle && bottom);
-    };
-
-    function turnRight(x, y) {
-      var rightEdge = (x > width*0.66);
-      var bottom = (y > height*0.75);
-      return (rightEdge && bottom);
-    };
-
-    function accelerate(x, y) {
-      var top = (y < height*0.5);
-      return top;
-    };
+    function getHeading(x, y) {
+      var trackpadWidth = width*0.5;
+      var trackpadULX = width*0.5;
+      var trackpadULY = height*0.75;
+      var onTrackpad = (y > trackpadULY) && (x > trackpadULX);
+      var xRelativeToTrackpadULX = Math.max(x - trackpadULX, 0.0);  // 0..trackpadWidth
+      var xRelativeToTrackpadCenter = 2.0 * ((xRelativeToTrackpadULX / trackpadWidth) - 0.5);  // -1..+1
+      return xRelativeToTrackpadCenter;
+    }
 
     for (var i=0; i < event.changedTouches.length; i++) {
       var touch = event.changedTouches[i];
@@ -204,30 +193,15 @@ bkcore.hexgl.ShipControls = function(domElement)
       var y = touch.pageY;
 
       if (event.type === 'touchstart') {
-        if (turnLeft(x, y)) self.touch.left = true;
-        if (turnRight(x, y)) self.touch.right = true;
-        if (accelerate(x, y)) self.touch.forward = true;
-      }
-
-      if (event.type === 'touchend') {
-        if (turnLeft(x, y)) self.touch.left = false;
-        if (turnRight(x, y)) self.touch.right = false;
-        if (accelerate(x, y)) self.touch.forward = false;
+        self.touch.heading = getHeading(x, y);
       }
 
       if (event.type === 'touchmove') {
-        if (turnLeft(x, y)) {
-          self.touch.left = true;
-          self.touch.right = false;
-        }
-        if (turnRight(x, y)) {
-          self.touch.left = false;
-          self.touch.right = true;
-        }
-        if (straightAhead(x, y)) {
-          self.touch.left = false;
-          self.touch.right = false;
-        }
+        self.touch.heading = getHeading(x, y);
+      }
+
+      if (event.type === 'touchend') {
+        self.touch.heading = 0.0;
       }
     }
   };
@@ -295,18 +269,21 @@ bkcore.hexgl.ShipControls.prototype.update = function(dt)
 
   if (this.useTouchControls === true) {
 
-    if(this.touch.forward) {
+    if (this.touch.accelerate) {
       this.accelerating = true;
       this.speed += this.thrust * dt;
     } else {
       this.accelerating = false;
       this.speed -= this.airResist * dt;
     }
+
+    angularAmount += -this.touch.heading * this.angularSpeed * dt;
+    rollAmount -= -this.touch.heading * this.rollAngle;
   }
 
   // Keyboard controls
 
-  if (this.useKeyboardControls === true) {
+  if (this.useKeyboardControls === true && this.useTouchControls === false) {
 
 	  if(this.key.forward) {
       this.accelerating = true;
@@ -315,44 +292,45 @@ bkcore.hexgl.ShipControls.prototype.update = function(dt)
       this.accelerating = false;
 		  this.speed -= this.airResist * dt;
     }
+	  if(this.key.left)
+	  {
+		  angularAmount += this.angularSpeed * dt;
+		  rollAmount -= this.rollAngle;
+	  }
+	  if(this.key.right)
+	  {
+		  angularAmount -= this.angularSpeed * dt;
+		  rollAmount += this.rollAngle;
+	  }
+	  if(this.key.ltrigger)
+	  {
+		  if(this.key.left)
+			  angularAmount += this.airAngularSpeed * dt;
+		  else
+			  angularAmount += this.airAngularSpeed * 0.5 * dt;
+		  this.speed -= this.airBrake * dt;
+		  this.drift += (this.airDrift - this.drift) * this.driftLerp;
+		  this.movement.x += this.speed * this.drift * dt;
+		  if(this.drift > 0.0)
+			  this.movement.z -= this.speed * this.drift * dt;
+		  rollAmount -= this.rollAngle * 0.7;
+	  }
+	  if(this.key.rtrigger)
+	  {
+		  if(this.key.right)
+			  angularAmount -= this.airAngularSpeed * dt;
+		  else
+			  angularAmount -= this.airAngularSpeed * 0.5 * dt;
+		  this.speed -= this.airBrake * dt;
+		  this.drift += (-this.airDrift - this.drift) * this.driftLerp;
+		  this.movement.x += this.speed * this.drift * dt;
+		  if(this.drift < 0.0)
+			  this.movement.z += this.speed * this.drift * dt;
+		  rollAmount += this.rollAngle * 0.7;
+	  }
   }
-    
-	if(this.key.left)
-	{
-		angularAmount += this.angularSpeed * dt;
-		rollAmount -= this.rollAngle;
-	}
-	if(this.key.right)
-	{
-		angularAmount -= this.angularSpeed * dt;
-		rollAmount += this.rollAngle;
-	}
-	if(this.key.ltrigger)
-	{
-		if(this.key.left)
-			angularAmount += this.airAngularSpeed * dt;
-		else
-			angularAmount += this.airAngularSpeed * 0.5 * dt;
-		this.speed -= this.airBrake * dt;
-		this.drift += (this.airDrift - this.drift) * this.driftLerp;
-		this.movement.x += this.speed * this.drift * dt;
-		if(this.drift > 0.0)
-			this.movement.z -= this.speed * this.drift * dt;
-		rollAmount -= this.rollAngle * 0.7;
-	}
-	if(this.key.rtrigger)
-	{
-		if(this.key.right)
-			angularAmount -= this.airAngularSpeed * dt;
-		else
-			angularAmount -= this.airAngularSpeed * 0.5 * dt;
-		this.speed -= this.airBrake * dt;
-		this.drift += (-this.airDrift - this.drift) * this.driftLerp;
-		this.movement.x += this.speed * this.drift * dt;
-		if(this.drift < 0.0)
-			this.movement.z += this.speed * this.drift * dt;
-		rollAmount += this.rollAngle * 0.7;
-	}
+
+  // Common control code
 
 	this.angular += (angularAmount - this.angular) * this.angularLerp;
 	this.rotation.y = this.angular;
