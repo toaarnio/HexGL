@@ -117,9 +117,9 @@ bkcore.hexgl.ShipEffects.prototype.update = function(dt)
 	else
 	{
 		boostRatio = this.shipControls.getBoostRatio();
-		opacity = this.shipControls.key.forward ? 0.8 : 0.3 + boostRatio * 0.4;
-		scale = (this.shipControls.key.forward ? 1.0 : 0.8) + boostRatio * 0.5;
-		intensity = this.shipControls.key.forward ? 4.0 : 2.0;
+		opacity = this.shipControls.accelerating ? 0.8 : 0.3 + boostRatio * 0.4;
+		scale = (this.shipControls.accelerating ? 1.0 : 0.8) + boostRatio * 0.5;
+		intensity = this.shipControls.accelerating ? 4.0 : 2.0;
 		random = Math.random()*0.2;
 	}
 

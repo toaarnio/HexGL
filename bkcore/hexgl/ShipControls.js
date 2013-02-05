@@ -52,6 +52,7 @@ bkcore.hexgl.ShipControls = function(domElement)
 	this.shield = 1.0;
 	this.angular = 0.0;
 
+  this.accelerating = false;
 	this.currentVelocity = new THREE.Vector3();
 
 	this.quaternion = new THREE.Quaternion();
@@ -98,6 +99,9 @@ bkcore.hexgl.ShipControls = function(domElement)
 	this.resetPos = null;
 	this.resetRot = null;
 
+  this.useKeyboardControls = false;
+  this.useTouchControls = true;
+
 	this.key = {
 		forward: false,
 		backward: false,
@@ -107,6 +111,13 @@ bkcore.hexgl.ShipControls = function(domElement)
 		rtrigger: false,
 		use: false
 	};
+
+  this.touch = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false
+  };
 
 	this.collision = {
 		front: false,
@@ -193,29 +204,29 @@ bkcore.hexgl.ShipControls = function(domElement)
       var y = touch.pageY;
 
       if (event.type === 'touchstart') {
-        if (turnLeft(x, y)) self.key.left = true;
-        if (turnRight(x, y)) self.key.right = true;
-        if (accelerate(x, y)) self.key.forward = true;
+        if (turnLeft(x, y)) self.touch.left = true;
+        if (turnRight(x, y)) self.touch.right = true;
+        if (accelerate(x, y)) self.touch.forward = true;
       }
 
       if (event.type === 'touchend') {
-        if (turnLeft(x, y)) self.key.left = false;
-        if (turnRight(x, y)) self.key.right = false;
-        if (accelerate(x, y)) self.key.forward = false;
+        if (turnLeft(x, y)) self.touch.left = false;
+        if (turnRight(x, y)) self.touch.right = false;
+        if (accelerate(x, y)) self.touch.forward = false;
       }
 
       if (event.type === 'touchmove') {
         if (turnLeft(x, y)) {
-          self.key.left = true;
-          self.key.right = false;
+          self.touch.left = true;
+          self.touch.right = false;
         }
         if (turnRight(x, y)) {
-          self.key.left = false;
-          self.key.right = true;
+          self.touch.left = false;
+          self.touch.right = true;
         }
         if (straightAhead(x, y)) {
-          self.key.left = false;
-          self.key.right = false;
+          self.touch.left = false;
+          self.touch.right = false;
         }
       }
     }
@@ -261,11 +272,11 @@ bkcore.hexgl.ShipControls.prototype.reset = function(position, rotation)
 
 bkcore.hexgl.ShipControls.prototype.destroy = function()
 {
-	//this.active = false;
-	//this.destroyed = true;
-	//this.collision.front = false;
-	//this.collision.left = false;
-	//this.collision.right = false;
+	this.active = false;
+	this.destroyed = true;
+	this.collision.front = false;
+	this.collision.left = false;
+	this.collision.right = false;
 }
 
 bkcore.hexgl.ShipControls.prototype.update = function(dt)
@@ -280,10 +291,32 @@ bkcore.hexgl.ShipControls.prototype.update = function(dt)
 	var rollAmount = 0.0;
 	var angularAmount = 0.0;
 
-	if(this.key.forward)
-		this.speed += this.thrust * dt;
-	else
-		this.speed -= this.airResist * dt;
+  // Touch controls
+
+  if (this.useTouchControls === true) {
+
+    if(this.touch.forward) {
+      this.accelerating = true;
+      this.speed += this.thrust * dt;
+    } else {
+      this.accelerating = false;
+      this.speed -= this.airResist * dt;
+    }
+  }
+
+  // Keyboard controls
+
+  if (this.useKeyboardControls === true) {
+
+	  if(this.key.forward) {
+      this.accelerating = true;
+		  this.speed += this.thrust * dt;
+	  } else {
+      this.accelerating = false;
+		  this.speed -= this.airResist * dt;
+    }
+  }
+    
 	if(this.key.left)
 	{
 		angularAmount += this.angularSpeed * dt;
@@ -366,7 +399,7 @@ bkcore.hexgl.ShipControls.prototype.update = function(dt)
 	if(this.shield <= 0.0)
 	{
 		this.shield = 0.0;
-		this.destroy();
+		//this.destroy();
 	}
 
 	if(this.mesh != null)
