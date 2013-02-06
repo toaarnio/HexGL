@@ -37,7 +37,7 @@ bkcore.hexgl.tracks.Cityscape = {
 
 	load: function(opts, quality)
 	{
-		this.lib = new bkcore.threejs.Loader(opts);
+		this.lib = new bkcore.threejs.Loader(opts, quality);
 
 		if(quality < 1) // LOW
 		{

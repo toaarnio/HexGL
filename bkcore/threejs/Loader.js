@@ -19,7 +19,7 @@ bkcore.NONE = undefined;
  * Creates a new loader
  * @param {Object{onLoad, onError, onProgress}} opts Callbacks
  */
-bkcore.threejs.Loader = function(opts)
+bkcore.threejs.Loader = function(opts, quality)
 {
 	var self = this;
 
@@ -28,6 +28,8 @@ bkcore.threejs.Loader = function(opts)
 	this.errorCallback = opts.onError == undefined ? function(s){ console.warn("Error while loading %s.".replace("%s", s)) } : opts.onError;
 	this.loadCallback = opts.onLoad == undefined ? function(){ console.log("Loaded.") } : opts.onLoad;
 	this.progressCallback = opts.onProgress == undefined ? function(progress, type, name){ /**/ } : opts.onProgress;
+
+  this.quality = quality;
 
 	this.types = {
 		textures: null,
@@ -77,21 +79,29 @@ bkcore.threejs.Loader.prototype.load = function(data)
 
 	for(var t in data.textures) {
 		this.loadTexture(t, data.textures[t]);
-    this.data.textures[t].generateMipmaps = true;
-    //this.data.textures[t].magFilter = THREE.NearestFilter;
-    //this.data.textures[t].minFilter = THREE.NearestFilter;
-    this.data.textures[t].minFilter = THREE.LinearMipMapLinearFilter;
-    this.data.textures[t].magFilter = THREE.LinearFilter;
+    if (this.quality >= 0) {
+      this.data.textures[t].generateMipmaps = true;
+      this.data.textures[t].minFilter = THREE.LinearMipMapLinearFilter;
+      this.data.textures[t].magFilter = THREE.LinearFilter;
+    } else {
+      this.data.textures[t].generateMipmaps = false;
+      this.data.textures[t].magFilter = THREE.NearestFilter;
+      this.data.textures[t].minFilter = THREE.NearestFilter;
+    }
     console.log(this.data.textures[t]);
   }
 
 	for(var c in data.texturesCube) {
 		this.loadTextureCube(c, data.texturesCube[c]);
-    this.data.texturesCube[c].generateMipmaps = true;
-    //this.data.texturesCube[c].magFilter = THREE.NearestFilter;
-    //this.data.texturesCube[c].minFilter = THREE.NearestFilter;
-    this.data.texturesCube[c].minFilter = THREE.LinearMipMapLinearFilter;
-    this.data.texturesCube[c].magFilter = THREE.LinearFilter;
+    if (this.quality >= 0) {
+      this.data.texturesCube[c].generateMipmaps = true;
+      this.data.texturesCube[c].minFilter = THREE.LinearMipMapLinearFilter;
+      this.data.texturesCube[c].magFilter = THREE.LinearFilter;
+    } else {
+      this.data.texturesCube[c].generateMipmaps = false;
+      this.data.texturesCube[c].magFilter = THREE.NearestFilter;
+      this.data.texturesCube[c].minFilter = THREE.NearestFilter;
+    }
     console.log(this.data.texturesCube[c]);
   }
 
